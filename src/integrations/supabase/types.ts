@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      diagnosis_feedback: {
+        Row: {
+          created_at: string
+          diagnosis_id: string
+          helpful: boolean
+          id: string
+          user_comment: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diagnosis_id: string
+          helpful: boolean
+          id?: string
+          user_comment?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diagnosis_id?: string
+          helpful?: boolean
+          id?: string
+          user_comment?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnosis_feedback_diagnosis_id_fkey"
+            columns: ["diagnosis_id"]
+            isOneToOne: false
+            referencedRelation: "diagnosis_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnosis_history: {
         Row: {
           created_at: string
