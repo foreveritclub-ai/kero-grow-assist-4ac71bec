@@ -1,7 +1,12 @@
-import { Shield, AlertTriangle, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { Shield, AlertTriangle, CheckCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface DiagnosisResult {
   severity: "good" | "warning" | "danger";
+  confidence?: "high" | "medium" | "low";
   greeting_ki?: string;
   greeting_en?: string;
   diagnosis_en: string;
@@ -23,6 +28,7 @@ export interface DiagnosisResult {
 interface DiagnosisCardProps {
   result: DiagnosisResult;
   lang: "en" | "ki";
+  diagnosisId?: string | null;
 }
 
 const severityConfig = {
@@ -52,9 +58,12 @@ const severityConfig = {
   },
 };
 
-export function DiagnosisCard({ result, lang }: DiagnosisCardProps) {
+export function DiagnosisCard({ result, lang, diagnosisId }: DiagnosisCardProps) {
   const sev = severityConfig[result.severity] || severityConfig.warning;
   const Icon = sev.icon;
+  const { user } = useAuth();
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackValue, setFeedbackValue] = useState<boolean | null>(null);
 
   const greeting = lang === "ki" ? result.greeting_ki : result.greeting_en;
   const diagnosis = lang === "ki" ? result.diagnosis_ki : result.diagnosis_en;
@@ -65,6 +74,21 @@ export function DiagnosisCard({ result, lang }: DiagnosisCardProps) {
   const proper = lang === "ki" ? result.proper_solution_ki : result.proper_solution_en;
   const encouragement = lang === "ki" ? result.encouragement_ki : result.encouragement_en;
   const sevLabel = lang === "ki" ? sev.labelKi : sev.label;
+
+  const sendFeedback = async (helpful: boolean) => {
+    if (!user || !diagnosisId || feedbackSent) return;
+    setFeedbackValue(helpful);
+    setFeedbackSent(true);
+    try {
+      await supabase.from("diagnosis_feedback").insert({
+        user_id: user.id,
+        diagnosis_id: diagnosisId,
+        helpful,
+      });
+    } catch (err) {
+      console.error("Failed to save feedback:", err);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -91,7 +115,7 @@ export function DiagnosisCard({ result, lang }: DiagnosisCardProps) {
       {/* Emergency Solution */}
       {emergency && (
         <div className="bg-severity-warning/5 rounded-xl border border-severity-warning/20 p-4">
-          <h3 className="font-display font-bold text-sm mb-2">⚡ {lang === "ki" ? "Igisubizo cyihuse" : "Emergency Solution"}</h3>
+          <h3 className="font-display font-bold text-sm mb-2">⚡ {lang === "ki" ? "Uburyo bwihuse" : "Emergency Solution"}</h3>
           <p className="text-sm text-foreground font-body leading-relaxed">{emergency}</p>
         </div>
       )}
@@ -99,7 +123,7 @@ export function DiagnosisCard({ result, lang }: DiagnosisCardProps) {
       {/* Proper Solution */}
       {proper && (
         <div className="bg-primary/5 rounded-xl border border-primary/20 p-4">
-          <h3 className="font-display font-bold text-sm mb-2">🛠 {lang === "ki" ? "Igisubizo cyiza" : "Proper Solution"}</h3>
+          <h3 className="font-display font-bold text-sm mb-2">🛠 {lang === "ki" ? "Uburyo bwuzuye" : "Proper Solution"}</h3>
           <p className="text-sm text-foreground font-body leading-relaxed">{proper}</p>
         </div>
       )}
@@ -140,6 +164,41 @@ export function DiagnosisCard({ result, lang }: DiagnosisCardProps) {
       {encouragement && (
         <div className="bg-secondary/10 rounded-xl p-4 text-center">
           <p className="text-sm font-display font-semibold text-foreground">{encouragement}</p>
+        </div>
+      )}
+
+      {/* Feedback */}
+      {diagnosisId && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          {!feedbackSent ? (
+            <div className="text-center">
+              <p className="font-display font-semibold text-sm mb-3">
+                {lang === "ki" ? "Ese iyi nama yagufashije?" : "Was this helpful?"}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => sendFeedback(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-severity-good/10 text-severity-good border border-severity-good/30 font-display font-semibold text-sm active:scale-95 transition-transform"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  {lang === "ki" ? "Yego" : "Yes"}
+                </button>
+                <button
+                  onClick={() => sendFeedback(false)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-destructive/10 text-destructive border border-destructive/30 font-display font-semibold text-sm active:scale-95 transition-transform"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  {lang === "ki" ? "Oya" : "No"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-sm font-display font-semibold text-muted-foreground">
+              {feedbackValue
+                ? (lang === "ki" ? "💚 Murakoze! Turishimiye ko twagufashije." : "💚 Thank you! Glad we could help.")
+                : (lang === "ki" ? "🙏 Murakoze! Tuzagerageza kunoza serivisi yacu." : "🙏 Thank you! We'll work to improve.")}
+            </p>
+          )}
         </div>
       )}
     </div>
