@@ -14,6 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_answers: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_accepted: boolean
+          question_id: string
+          user_id: string
+          votes: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_accepted?: boolean
+          question_id: string
+          user_id: string
+          votes?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_accepted?: boolean
+          question_id?: string
+          user_id?: string
+          votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "community_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_questions: {
+        Row: {
+          answers_count: number
+          body: string
+          created_at: string
+          crop_name: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          votes: number
+        }
+        Insert: {
+          answers_count?: number
+          body: string
+          created_at?: string
+          crop_name?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          votes?: number
+        }
+        Update: {
+          answers_count?: number
+          body?: string
+          created_at?: string
+          crop_name?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          votes?: number
+        }
+        Relationships: []
+      }
+      community_votes: {
+        Row: {
+          answer_id: string | null
+          created_at: string
+          id: string
+          question_id: string | null
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          answer_id?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          user_id: string
+          vote_type?: number
+        }
+        Update: {
+          answer_id?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          user_id?: string
+          vote_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "community_answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_votes_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "community_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnosis_feedback: {
         Row: {
           created_at: string
