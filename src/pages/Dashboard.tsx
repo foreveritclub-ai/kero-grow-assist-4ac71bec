@@ -22,6 +22,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [farmCount, setFarmCount] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
