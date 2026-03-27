@@ -1,10 +1,11 @@
-import { Camera, Keyboard, Sprout, TrendingUp, BookOpen, Clock, MessageSquare, CloudSun } from "lucide-react";
+import { Camera, Keyboard, Sprout, TrendingUp, BookOpen, Clock, MessageSquare, CloudSun, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { MobileLayout } from "@/components/MobileLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecentItem {
   id: string;
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [farmCount, setFarmCount] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -102,6 +104,32 @@ export default function Dashboard() {
             );
           })}
         </div>
+      </div>
+
+      {/* Download App Button */}
+      <div className="px-5 mt-4">
+        <button
+          onClick={() => {
+            const w = window as any;
+            if (w.deferredPWAPrompt) {
+              w.deferredPWAPrompt.prompt();
+              w.deferredPWAPrompt.userChoice.then(() => { w.deferredPWAPrompt = null; });
+            } else {
+              toast({
+                title: lang === "ki" ? "Kwinjiza Kero" : "Install Kero",
+                description: lang === "ki"
+                  ? "Kanda 'Share' hanyuma 'Add to Home Screen' kuri Safari, cyangwa menu kuri Chrome."
+                  : "Tap 'Share' then 'Add to Home Screen' on Safari, or use Chrome's menu.",
+              });
+            }
+          }}
+          className="w-full flex items-center gap-3 bg-primary/10 rounded-xl px-4 py-3.5 active:bg-primary/20 transition-colors"
+        >
+          <Download className="w-5 h-5 text-primary" />
+          <span className="font-display text-sm font-semibold text-primary">
+            {lang === "ki" ? "⬇️ Injiza Kero ku telefoni" : "⬇️ Download Kero App"}
+          </span>
+        </button>
       </div>
 
       <div className="px-5 mt-6 mb-4">
