@@ -132,6 +132,7 @@ export default function Dashboard() {
         </button>
       </div>
 
+      <div className="px-5 mt-6 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display font-bold text-base">{t("dash.recentActivity")}</h2>
           <button onClick={() => navigate("/history")} className="text-xs text-primary font-semibold">{t("dash.viewAll")}</button>
