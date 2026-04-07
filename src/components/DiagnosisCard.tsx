@@ -93,6 +93,19 @@ export function DiagnosisCard({ result, lang, diagnosisId }: DiagnosisCardProps)
 
   return (
     <div className="space-y-4">
+      {/* 🔊 Listen to Full Diagnosis */}
+      <SpeakAllButton
+        lang={lang}
+        sections={[
+          { label: lang === "ki" ? "Ikibazo" : "Issue", text: issue },
+          { label: lang === "ki" ? "Isuzuma" : "Diagnosis", text: diagnosis },
+          ...(emergency ? [{ label: lang === "ki" ? "Uburyo bwihuse" : "Emergency Solution", text: emergency }] : []),
+          ...(proper ? [{ label: lang === "ki" ? "Uburyo bwuzuye" : "Proper Solution", text: proper }] : []),
+          { label: lang === "ki" ? "Ibisubizo" : "Solutions", text: solutions?.join(". ") || "" },
+          { label: lang === "ki" ? "Kwirinda" : "Prevention", text: prevention?.join(". ") || "" },
+        ]}
+      />
+
       {/* Greeting */}
       {greeting && (
         <p className="text-base font-display font-bold text-foreground">{greeting}</p>

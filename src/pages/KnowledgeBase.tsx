@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, BookOpen, Bug, Droplets, Leaf, Sun, ChevronRight, Sprout, Flower2, TreePine, Coffee, Play } from "lucide-react";
+import { ArrowLeft, BookOpen, Bug, Droplets, Leaf, Sun, ChevronRight, Sprout, Flower2, TreePine, Coffee, Play, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MobileLayout } from "@/components/MobileLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
