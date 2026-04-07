@@ -14,6 +14,7 @@ import AuthPage from "./pages/AuthPage";
 import HistoryPage from "./pages/HistoryPage";
 import CommunityPage from "./pages/CommunityPage";
 import WeatherPage from "./pages/WeatherPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -41,6 +42,7 @@ const AppRoutes = () => (
     <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
     <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
     <Route path="/weather" element={<ProtectedRoute><WeatherPage /></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

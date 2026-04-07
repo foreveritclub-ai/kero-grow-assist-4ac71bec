@@ -132,7 +132,7 @@ export default function ProfilePage() {
               <span className="flex-1 font-display text-sm font-semibold">{t("profile.privacy")}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
+            <button onClick={() => navigate("/settings")} className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-muted/50 transition-colors">
               <Settings className="w-5 h-5 text-primary" />
               <span className="flex-1 font-display text-sm font-semibold">{t("profile.settings")}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
