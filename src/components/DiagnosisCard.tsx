@@ -3,6 +3,7 @@ import { Shield, AlertTriangle, CheckCircle, ThumbsUp, ThumbsDown } from "lucide
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { SpeakButton, SpeakAllButton } from "@/components/SpeakButton";
 
 export interface DiagnosisResult {
   severity: "good" | "warning" | "danger";
