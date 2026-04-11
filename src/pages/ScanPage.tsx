@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Camera, Upload, Keyboard, Sparkles, ArrowLeft, Loader2, Mic, MicOff, Plus } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useOfflineCache } from "@/hooks/useOfflineCache";
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function ScanPage() {
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [lastDiagnosisId, setLastDiagnosisId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { saveDiagnosis: cacheOffline } = useOfflineCache();
 
   // Voice input state
   const [isListening, setIsListening] = useState(false);
@@ -140,6 +142,8 @@ export default function ScanPage() {
       setResult(diagnosis);
       const diagId = await saveDiagnosis(diagnosis);
       setLastDiagnosisId(diagId);
+      // Cache offline
+      cacheOffline(diagnosis, cropName, mode, diagId || undefined);
     } catch (err: any) {
       console.error("Diagnosis error:", err);
       toast({
