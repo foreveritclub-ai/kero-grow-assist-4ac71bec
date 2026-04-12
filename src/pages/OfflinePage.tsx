@@ -57,12 +57,17 @@ export default function OfflinePage() {
   const [tab, setTab] = useState<"crops" | "history">("crops");
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
+  const [visibleCount, setVisibleCount] = useState(30);
   const categories = useMemo(() => getCropCategories(), []);
   const filtered = useMemo(() => {
     let results = searchCrops(query);
     if (selectedCat) results = results.filter((c) => c.category_en === selectedCat);
     return results;
   }, [query, selectedCat]);
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
+  // Reset visible count when filter changes
+  useMemo(() => { setVisibleCount(30); }, [query, selectedCat]);
 
   return (
     <MobileLayout>
@@ -134,9 +139,17 @@ export default function OfflinePage() {
             </p>
 
             <div className="space-y-2">
-              {filtered.map((crop) => (
+              {visible.map((crop) => (
                 <CropItem key={crop.name_en} crop={crop} lang={lang} />
               ))}
+              {visibleCount < filtered.length && (
+                <button
+                  onClick={() => setVisibleCount((v) => v + 30)}
+                  className="w-full py-3 rounded-xl bg-primary/10 text-primary font-display font-bold text-sm active:scale-95 transition-transform"
+                >
+                  {lang === "ki" ? `Erekana ibindi (${filtered.length - visibleCount} bisigaye)` : `Show more (${filtered.length - visibleCount} remaining)`}
+                </button>
+              )}
             </div>
           </div>
         ) : (
