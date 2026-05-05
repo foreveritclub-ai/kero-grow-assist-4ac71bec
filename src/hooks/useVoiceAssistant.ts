@@ -89,42 +89,107 @@ export function useVoiceAssistant() {
     };
   }, []);
 
-  const speak = useCallback((text: string, lang: "en" | "ki" = "en") => {
-    if (!isSupported) return;
+  /**
+   * Phrase types let us tune rate/pitch/pauses per section so Kero sounds like
+   * a real young Rwandan advisor — warm on greetings, urgent on emergencies,
+   * calm and clear on recommendations, uplifting on encouragement.
+   */
+  type PhraseType = "greeting" | "emergency" | "solution" | "encouragement" | "default";
 
-    // Stop any current speech
-    speechSynthesis.cancel();
+  const getProsody = (lang: "en" | "ki", type: PhraseType) => {
+    if (lang !== "ki") {
+      // English defaults — keep close to natural conversational
+      const en: Record<PhraseType, { rate: number; pitch: number; gapMs: number }> = {
+        greeting:      { rate: 0.95, pitch: 1.10, gapMs: 280 },
+        emergency:     { rate: 1.00, pitch: 1.05, gapMs: 200 },
+        solution:      { rate: 0.92, pitch: 1.00, gapMs: 260 },
+        encouragement: { rate: 0.90, pitch: 1.08, gapMs: 320 },
+        default:       { rate: 0.92, pitch: 1.00, gapMs: 240 },
+      };
+      return en[type];
+    }
+    // Kinyarwanda — tuned to mimic a young (~teenage) Rwandan advisor:
+    // a touch faster than an elder, slightly higher pitch, with emotional
+    // variation and clear pauses between lines so each sentence lands.
+    const ki: Record<PhraseType, { rate: number; pitch: number; gapMs: number }> = {
+      greeting:      { rate: 0.86, pitch: 1.18, gapMs: 380 }, // warm, smiling
+      emergency:     { rate: 0.92, pitch: 1.10, gapMs: 240 }, // urgent but clear
+      solution:      { rate: 0.82, pitch: 1.02, gapMs: 360 }, // calm, instructional
+      encouragement: { rate: 0.84, pitch: 1.15, gapMs: 420 }, // hopeful, uplifting
+      default:       { rate: 0.84, pitch: 1.06, gapMs: 320 },
+    };
+    return ki[type];
+  };
 
-    // Clean text: remove markdown, emojis, bullets
-    const cleanText = text
-      .replace(/[#*_~`]/g, "")
-      .replace(/\n{2,}/g, ". ")
-      .replace(/\n/g, ", ")
-      .replace(/•/g, "")
+  // Split text into natural speech lines so Kero reads sentence-by-sentence
+  // (like a human advisor) instead of one long monotone block.
+  const splitIntoLines = (text: string): string[] => {
+    return text
+      .replace(/[#*_~`•]/g, "")
       .replace(/\d+\./g, "")
-      .trim();
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  };
 
-    if (!cleanText) return;
+  const speakLines = useCallback(
+    (lines: string[], lang: "en" | "ki", type: PhraseType) => {
+      if (!isSupported || !lines.length) return;
+      speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    const voice = getBestVoice(lang);
-    if (voice) utterance.voice = voice;
+      const voice = getBestVoice(lang);
+      const { rate, pitch, gapMs } = getProsody(lang, type);
+      const baseLang = lang === "ki" ? (voice?.lang || "sw-KE") : (voice?.lang || "en-US");
 
-    // Set BCP-47 lang hint - improves pronunciation even when voice is a fallback
-    utterance.lang = lang === "ki" ? (voice?.lang || "sw-KE") : (voice?.lang || "en-US");
+      setIsSpeaking(true);
+      let cancelled = false;
 
-    // Slower, slightly lower pitch for Kinyarwanda - sounds more like a respectful elder advisor
-    utterance.rate = lang === "ki" ? 0.78 : 0.92;
-    utterance.pitch = lang === "ki" ? 0.95 : 1.0;
-    utterance.volume = 1.0;
+      const speakIndex = (i: number) => {
+        if (cancelled || i >= lines.length) {
+          if (!cancelled) setIsSpeaking(false);
+          return;
+        }
+        const line = lines[i];
+        const utt = new SpeechSynthesisUtterance(line);
+        if (voice) utt.voice = voice;
+        utt.lang = baseLang;
+        // Subtle per-line variation so it doesn't feel robotic
+        const jitter = (Math.random() - 0.5) * 0.06;
+        utt.rate = Math.max(0.6, Math.min(1.2, rate + jitter));
+        utt.pitch = Math.max(0.6, Math.min(1.4, pitch + jitter));
+        utt.volume = 1.0;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+        utt.onend = () => {
+          // Pause between lines so each sentence lands like a human advisor
+          window.setTimeout(() => speakIndex(i + 1), gapMs);
+        };
+        utt.onerror = () => {
+          if (!cancelled) setIsSpeaking(false);
+        };
 
-    utteranceRef.current = utterance;
-    speechSynthesis.speak(utterance);
-  }, [isSupported]);
+        utteranceRef.current = utt;
+        speechSynthesis.speak(utt);
+      };
+
+      // Allow stop() to break the chain
+      const origCancel = speechSynthesis.cancel.bind(speechSynthesis);
+      (speechSynthesis as any)._keroCancel = () => {
+        cancelled = true;
+        origCancel();
+      };
+
+      speakIndex(0);
+    },
+    [isSupported]
+  );
+
+  const speak = useCallback(
+    (text: string, lang: "en" | "ki" = "en", type: PhraseType = "default") => {
+      const lines = splitIntoLines(text);
+      speakLines(lines, lang, type);
+    },
+    [speakLines]
+  );
 
   const stop = useCallback(() => {
     speechSynthesis.cancel();
