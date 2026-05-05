@@ -110,8 +110,12 @@ export function useVoiceAssistant() {
     const voice = getBestVoice(lang);
     if (voice) utterance.voice = voice;
 
-    utterance.rate = lang === "ki" ? 0.85 : 0.9; // Slightly slower for clarity
-    utterance.pitch = 1.0;
+    // Set BCP-47 lang hint - improves pronunciation even when voice is a fallback
+    utterance.lang = lang === "ki" ? (voice?.lang || "sw-KE") : (voice?.lang || "en-US");
+
+    // Slower, slightly lower pitch for Kinyarwanda - sounds more like a respectful elder advisor
+    utterance.rate = lang === "ki" ? 0.78 : 0.92;
+    utterance.pitch = lang === "ki" ? 0.95 : 1.0;
     utterance.volume = 1.0;
 
     utterance.onstart = () => setIsSpeaking(true);
