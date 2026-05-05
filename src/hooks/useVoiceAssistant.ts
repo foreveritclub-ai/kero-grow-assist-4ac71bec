@@ -19,36 +19,47 @@ function getBestVoice(lang: "en" | "ki"): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
 
   if (lang === "ki") {
-    // Try Kinyarwanda voices first
-    const rwVoice = voices.find(v => v.lang.startsWith("rw"));
+    // 1) True Kinyarwanda voice if available
+    const rwVoice = voices.find(v => v.lang.toLowerCase().startsWith("rw"));
     if (rwVoice) return rwVoice;
-    // Fall back to a natural-sounding English voice for reading Kinyarwanda
-    // (Kinyarwanda is phonetically regular, so English voices read it reasonably well)
+
+    // 2) Swahili - phonetically the closest Bantu language to Kinyarwanda
+    //    (vowels a/e/i/o/u, similar syllable structure) - sounds far more natural
+    //    than English when reading Kinyarwanda text.
+    const swVoice = voices.find(v => v.lang.toLowerCase().startsWith("sw"));
+    if (swVoice) return swVoice;
+
+    // 3) Other African / Bantu-adjacent locales
+    const africanLocales = ["zu", "xh", "yo", "ig", "ha", "am", "so"];
+    for (const code of africanLocales) {
+      const v = voices.find(v => v.lang.toLowerCase().startsWith(code));
+      if (v) return v;
+    }
+
+    // 4) French (widely-trained, handles Kinyarwanda vowels better than US English)
+    const frVoice = voices.find(v => v.lang.toLowerCase().startsWith("fr"));
+    if (frVoice) return frVoice;
+    // fall through to English fallback below
   }
 
   // Prefer premium / natural voices
   const naturalKeywords = ["natural", "premium", "enhanced", "neural", "wavenet"];
   const englishVoices = voices.filter(v => v.lang.startsWith("en"));
 
-  // Try to find a premium voice
   for (const keyword of naturalKeywords) {
     const premium = englishVoices.find(v => v.name.toLowerCase().includes(keyword));
     if (premium) return premium;
   }
 
-  // Prefer Google or Microsoft voices (generally higher quality)
   const branded = englishVoices.find(v =>
     v.name.includes("Google") || v.name.includes("Microsoft") || v.name.includes("Samantha")
   );
   if (branded) return branded;
 
-  // Any non-default English voice
   const nonDefault = englishVoices.find(v => !v.localService);
   if (nonDefault) return nonDefault;
 
-  // Any English voice
   if (englishVoices.length) return englishVoices[0];
-
   return voices[0];
 }
 
