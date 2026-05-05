@@ -192,17 +192,23 @@ export function useVoiceAssistant() {
   );
 
   const stop = useCallback(() => {
-    speechSynthesis.cancel();
+    const keroCancel = (speechSynthesis as any)._keroCancel;
+    if (keroCancel) keroCancel();
+    else speechSynthesis.cancel();
     setIsSpeaking(false);
   }, []);
 
-  const toggle = useCallback((text: string, lang: "en" | "ki" = "en") => {
-    if (isSpeaking) {
-      stop();
-    } else {
-      speak(text, lang);
-    }
-  }, [isSpeaking, speak, stop]);
+  const toggle = useCallback(
+    (
+      text: string,
+      lang: "en" | "ki" = "en",
+      type: "greeting" | "emergency" | "solution" | "encouragement" | "default" = "default"
+    ) => {
+      if (isSpeaking) stop();
+      else speak(text, lang, type);
+    },
+    [isSpeaking, speak, stop]
+  );
 
   return { speak, stop, toggle, isSpeaking, isSupported, disabled };
 }
