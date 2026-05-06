@@ -27,7 +27,7 @@ export default function VoiceAssistantPage() {
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
   const { user } = useAuth();
-  const { speak, stop, isSpeaking, isSupported: ttsSupported } = useVoiceAssistant();
+  const { speak, speakSections, stop, isSpeaking, isSupported: ttsSupported } = useVoiceAssistant();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isListening, setIsListening] = useState(false);
