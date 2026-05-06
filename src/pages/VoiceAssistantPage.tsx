@@ -136,9 +136,19 @@ export default function VoiceAssistantPage() {
       };
       setMessages(prev => [...prev, assistantMsg]);
 
-      // Auto-speak the response
+      // Auto-speak the response with per-section prosody
       if (ttsSupported) {
-        speak(responseText, lang as "en" | "ki");
+        const sections = [
+          greeting && { type: "greeting" as const, text: greeting },
+          disease && { type: "default" as const, text: `${severityEmoji} ${disease}` },
+          diagnosis && { type: "default" as const, text: diagnosis },
+          emergency && { type: "emergency" as const, text: emergency },
+          proper && { type: "solution" as const, text: proper },
+          solutions.length && { type: "solution" as const, text: solutions.join(". ") },
+          prevention.length && { type: "solution" as const, text: prevention.slice(0, 3).join(". ") },
+          encouragement && { type: "encouragement" as const, text: encouragement },
+        ].filter(Boolean) as { type: any; text: string }[];
+        speakSections(sections, lang as "en" | "ki");
       }
 
       // Save to history
